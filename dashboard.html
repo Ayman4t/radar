@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Opt-in marker: the Noon Pulse extension bridge only talks to pages that have this tag -->
+<meta name="noon-pulse-dashboard" content="1">
+<title>Noon Pulse | رادار نون</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { theme: { extend: { fontFamily: { sans: ['Cairo', 'system-ui', 'sans-serif'] } } } };</script>
+<style>
+  :root { --bg:#090d16; --cyan:#00f5d4; --purple:#a855f7; --danger:#ff4d6d; --warn:#fbbf24; --ok:#34d399; }
+  html, body { background: var(--bg); }
+  body {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    background:
+      radial-gradient(900px 520px at 88% -8%, rgba(168,85,247,.20), transparent 60%),
+      radial-gradient(800px 520px at 8% 0%, rgba(0,245,212,.13), transparent 60%),
+      #090d16;
+    background-attachment: fixed;
+    color: #e2e8f0;
+  }
+  .glass {
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.09);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border-radius: 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,.35);
+  }
+  .glass-strong {
+    background: rgba(9,13,22,.72);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  }
+  .btn {
+    display:inline-flex; align-items:center; gap:.45rem; cursor:pointer; user-select:none;
+    padding:.55rem .95rem; border-radius:12px; font-weight:700; font-size:.85rem;
+    border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.05); color:#e2e8f0;
+    transition: transform .12s, background .15s, box-shadow .15s, opacity .15s;
+  }
+  .btn:hover { background:rgba(255,255,255,.1); transform: translateY(-1px); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .btn-cyan { background: linear-gradient(90deg, rgba(0,245,212,.9), rgba(0,245,212,.65)); color:#04141a; border-color:transparent; box-shadow:0 0 18px rgba(0,245,212,.28); }
+  .btn-cyan:hover { background: linear-gradient(90deg, #00f5d4, rgba(0,245,212,.8)); }
+  .btn-purple { background: linear-gradient(90deg, rgba(168,85,247,.9), rgba(168,85,247,.65)); color:#fff; border-color:transparent; box-shadow:0 0 18px rgba(168,85,247,.28); }
+  .btn-purple:hover { background: linear-gradient(90deg, #a855f7, rgba(168,85,247,.8)); }
+  .input {
+    background: rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.12); color:#e2e8f0;
+    border-radius:12px; padding:.55rem .85rem; font-size:.85rem; outline:none; width:100%;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .input:focus { border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(0,245,212,.15); }
+  .input::placeholder { color:#64748b; }
+
+  .kpi-label { font-size:.78rem; color:#94a3b8; font-weight:600; }
+  .kpi-value { font-size:1.9rem; font-weight:800; line-height:1.15; margin-top:.25rem; }
+  .kpi-sub { font-size:.75rem; color:#94a3b8; margin-top:.2rem; min-height:1.1rem; }
+  .grad-cyan { color: var(--cyan); text-shadow: 0 0 18px rgba(0,245,212,.35); }
+  .grad-purple { color: var(--purple); text-shadow: 0 0 18px rgba(168,85,247,.35); }
+
+  table { border-collapse: separate; border-spacing: 0; }
+  thead th { font-size:.72rem; color:#94a3b8; font-weight:700; text-align:right; padding:.7rem .75rem; white-space:nowrap; border-bottom:1px solid rgba(255,255,255,.08); }
+  tbody td { padding:.7rem .75rem; vertical-align:middle; border-bottom:1px solid rgba(255,255,255,.05); font-size:.85rem; }
+  tbody tr.row { cursor:pointer; transition: background .15s; }
+  tbody tr.row:hover { background: rgba(255,255,255,.05); }
+  tbody tr.row.sel { background: linear-gradient(90deg, rgba(0,245,212,.10), rgba(168,85,247,.10)); box-shadow: inset 3px 0 0 var(--cyan); }
+  .rank { width:2rem; color:#64748b; font-weight:700; }
+  .clamp2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; max-width:320px; }
+  .badge { display:inline-flex; align-items:center; gap:.3rem; padding:.15rem .55rem; border-radius:999px; font-size:.75rem; font-weight:700; border:1px solid transparent; white-space:nowrap; }
+  .b-danger { color:#ffd1d9; background:rgba(255,77,109,.16); border-color:rgba(255,77,109,.45); animation: pulse 1.6s infinite; }
+  .b-warn { color:#fde68a; background:rgba(251,191,36,.13); border-color:rgba(251,191,36,.4); }
+  .b-ok { color:#a7f3d0; background:rgba(52,211,153,.12); border-color:rgba(52,211,153,.35); }
+  .b-mute { color:#94a3b8; background:rgba(148,163,184,.1); border-color:rgba(148,163,184,.25); }
+  @keyframes pulse { 50% { box-shadow: 0 0 14px rgba(255,77,109,.55); } }
+  .vel-bar { height:5px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; margin-top:.3rem; width:90px; }
+  .vel-bar > i { display:block; height:100%; background:linear-gradient(90deg,var(--cyan),var(--purple)); }
+  .icon-btn { cursor:pointer; color:#64748b; padding:.25rem .4rem; border-radius:8px; transition:.15s; }
+  .icon-btn:hover { color:#ff4d6d; background:rgba(255,77,109,.12); }
+
+  .pill { display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .8rem; border-radius:999px; font-size:.78rem; font-weight:700; border:1px solid rgba(255,255,255,.12); background:rgba(255,255,255,.05); cursor:pointer; }
+  .dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .dot.live { background:var(--ok); box-shadow:0 0 10px var(--ok); animation: pulse2 1.4s infinite; }
+  .dot.demo { background:var(--warn); box-shadow:0 0 10px var(--warn); }
+  @keyframes pulse2 { 50% { opacity:.35; } }
+
+  #chartWrap { position:relative; width:100%; direction:ltr; }
+  #chart { display:block; touch-action:none; cursor:crosshair; }
+  #chartTip { position:absolute; pointer-events:none; display:none; min-width:150px; padding:.5rem .7rem; border-radius:12px; font-size:.78rem; direction:rtl;
+    background:rgba(9,13,22,.92); border:1px solid rgba(255,255,255,.16); box-shadow:0 8px 24px rgba(0,0,0,.5); }
+  .legend i { display:inline-block; width:18px; height:4px; border-radius:4px; vertical-align:middle; margin-inline-end:.4rem; }
+
+  .insight { border-radius:16px; padding:1rem; border:1px solid; }
+  .ins-go { background:rgba(52,211,153,.08); border-color:rgba(52,211,153,.4); }
+  .ins-hurry { background:rgba(251,191,36,.08); border-color:rgba(251,191,36,.45); }
+  .ins-ok { background:rgba(0,245,212,.07); border-color:rgba(0,245,212,.35); }
+  .ins-skip { background:rgba(255,77,109,.07); border-color:rgba(255,77,109,.35); }
+  .ins-wait { background:rgba(148,163,184,.08); border-color:rgba(148,163,184,.3); }
+  .score-bar { height:8px; border-radius:99px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .score-bar > i { display:block; height:100%; background:linear-gradient(90deg,var(--purple),var(--cyan)); transition: width .4s; }
+
+  .modal { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.6); padding:1rem; }
+  .modal.open { display:flex; }
+  #toasts { position:fixed; bottom:1rem; left:1rem; z-index:80; display:flex; flex-direction:column; gap:.5rem; }
+  .toast { padding:.65rem .95rem; border-radius:12px; font-size:.83rem; font-weight:600; max-width:360px; border:1px solid rgba(255,255,255,.14); background:rgba(9,13,22,.95); box-shadow:0 8px 24px rgba(0,0,0,.5); animation: tin .25s ease-out; }
+  .toast.ok { border-color:rgba(52,211,153,.5); } .toast.err { border-color:rgba(255,77,109,.55); } .toast.warn { border-color:rgba(251,191,36,.5); }
+  @keyframes tin { from { opacity:0; transform: translateY(8px); } }
+  .spin { width:14px; height:14px; border:2px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation: sp .7s linear infinite; display:inline-block; }
+  @keyframes sp { to { transform: rotate(360deg); } }
+  ::-webkit-scrollbar { height:8px; width:8px; } ::-webkit-scrollbar-thumb { background:rgba(255,255,255,.15); border-radius:8px; }
+  pre.sql { direction:ltr; text-align:left; background:rgba(0,0,0,.4); border:1px solid rgba(255,255,255,.1); border-radius:10px; padding:.7rem; font-size:.72rem; overflow:auto; color:#a7f3d0; }
+</style>
+</head>
+<body>
+
+<!-- ============================ Top command bar ============================ -->
+<header class="glass-strong sticky top-0 z-40">
+  <div class="max-w-[1500px] mx-auto px-4 py-3 space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <svg width="38" height="38" viewBox="0 0 38 38" aria-hidden="true">
+          <defs><linearGradient id="lg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#00f5d4"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs>
+          <rect x="1" y="1" width="36" height="36" rx="10" fill="#0d1322" stroke="url(#lg)" stroke-width="1.5"/>
+          <polyline points="5,20 12,20 16,10 22,29 26,16 29,20 33,20" fill="none" stroke="url(#lg)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <h1 class="text-lg md:text-xl font-extrabold leading-tight">Noon Pulse <span class="text-slate-500 font-semibold">|</span> <span class="grad-cyan">رادار نون</span></h1>
+          <div class="text-[11px] text-slate-500 font-semibold">by Ayman Stack · نظام ذكاء المنتجات لنون مصر</div>
+        </div>
+      </div>
+      <button id="statusPill" class="pill" title="اضغط لإعادة فحص الاتصال بالإضافة">
+        <span id="statusDot" class="dot demo"></span>
+        <span id="statusText">جارٍ فحص الاتصال…</span>
+      </button>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2">
+      <div class="flex flex-1 min-w-[280px] gap-2">
+        <input id="urlInput" class="input" dir="ltr" style="text-align:left" placeholder="https://www.noon.com/egypt-ar/.../N12345678A/p/  — الصق رابط منتج نون" autocomplete="off">
+        <button id="addBtn" class="btn btn-cyan" style="white-space:nowrap">＋ إضافة للرادار</button>
+      </div>
+      <button id="syncBtn" class="btn btn-purple">🔄 مزامنة لحظية</button>
+      <button id="demoBtn" class="btn">🎲 محاكاة بيانات حية</button>
+      <button id="csvBtn" class="btn">⬇ تصدير CSV</button>
+      <button id="settingsBtn" class="btn" title="الإعدادات">⚙</button>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-[1500px] mx-auto px-4 py-6 space-y-6">
+
+  <div id="connBanner" class="glass p-3 text-sm text-amber-200 hidden" style="border-color:rgba(251,191,36,.4)">
+    <b>الإضافة غير متصلة.</b> تعرض اللوحة بيانات تجريبية الآن. لربطها بالإضافة: ثبّت إضافة Noon Pulse في Chrome، وإذا فتحت هذا الملف مباشرة (file://) فعّل
+    «السماح بالوصول إلى عناوين URL للملفات» من صفحة الإضافة <span dir="ltr" class="font-mono">chrome://extensions</span>، أو شغّله عبر <span dir="ltr" class="font-mono">localhost</span>.
+    <button id="bannerClose" class="icon-btn" style="color:#fde68a">✕</button>
+  </div>
+
+  <!-- =============================== KPI bento =============================== -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="glass p-4">
+      <div class="kpi-label">إجمالي المنتجات المراقَبة</div>
+      <div id="kpiCount" class="kpi-value grad-cyan">0</div>
+      <div id="kpiCountSub" class="kpi-sub"></div>
+    </div>
+    <div class="glass p-4">
+      <div class="kpi-label">الأسرع حركةً (وحدة/ساعة)</div>
+      <div id="kpiFast" class="kpi-value grad-purple">—</div>
+      <div id="kpiFastSub" class="kpi-sub truncate"></div>
+    </div>
+    <div class="glass p-4">
+      <div class="kpi-label">حجم المبيعات المرصودة (ج.م)</div>
+      <div id="kpiRev" class="kpi-value grad-cyan">0</div>
+      <div id="kpiRevSub" class="kpi-sub"></div>
+    </div>
+    <div class="glass p-4">
+      <div class="kpi-label">تنبيهات نفاد المخزون (&lt; 5)</div>
+      <div id="kpiAlerts" class="kpi-value" style="color:var(--danger);text-shadow:0 0 18px rgba(255,77,109,.35)">0</div>
+      <div id="kpiAlertsSub" class="kpi-sub"></div>
+    </div>
+  </section>
+
+  <!-- ============================ Ranking table ============================= -->
+  <section class="glass overflow-hidden">
+    <div class="flex flex-wrap items-center justify-between gap-3 p-4">
+      <div>
+        <h2 class="text-base font-extrabold">🔥 ترتيب الطلب المرتفع</h2>
+        <div class="text-xs text-slate-400 mt-0.5">مرتّب تلقائياً حسب سرعة البيع (وحدة/ساعة) · <span id="lastSync">—</span></div>
+      </div>
+      <input id="searchInput" class="input" style="max-width:260px" placeholder="🔎 بحث بالاسم أو SKU أو البائع">
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full min-w-[1080px]">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>المنتج / SKU</th>
+            <th>البائع</th>
+            <th>السعر</th>
+            <th>المخزون المتبقي</th>
+            <th>المباع المرصود</th>
+            <th>السرعة (وحدة/ساعة)</th>
+            <th>نافذة ذروة الطلب</th>
+            <th>ساعات حتى النفاد</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="emptyState" class="hidden p-10 text-center text-slate-400 text-sm">
+      لا توجد منتجات بعد. افتح صفحة منتج على نون أو الصق رابطاً بالأعلى وأضفه للرادار.
+    </div>
+  </section>
+
+  <!-- ============================ Canvas inspector ============================ -->
+  <section id="inspector" class="glass p-4 md:p-5">
+    <div id="inspHead" class="mb-4"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+      <div class="lg:col-span-2">
+        <div class="flex flex-wrap gap-4 text-xs text-slate-300 mb-2 legend">
+          <span><i style="background:#00f5d4;box-shadow:0 0 8px #00f5d4"></i>منحنى استنزاف المخزون (وحدات)</span>
+          <span><i style="background:#a855f7;box-shadow:0 0 8px #a855f7"></i>تغيّر السعر (ج.م)</span>
+          <span><i style="background:rgba(168,85,247,.35)"></i>نافذة ذروة الطلب</span>
+        </div>
+        <div id="chartWrap"><canvas id="chart" height="360"></canvas><div id="chartTip"></div></div>
+      </div>
+      <div id="insightBox"></div>
+    </div>
+  </section>
+
+  <footer class="text-center text-[11px] text-slate-600 pb-6">Noon Pulse · بيانات تُعالَج محلياً داخل متصفحك — بدون خوادم</footer>
+</main>
+
+<!-- ================================ Settings ================================ -->
+<div id="settingsModal" class="modal">
+  <div class="glass p-5 w-full max-w-lg space-y-4" style="background:rgba(13,19,34,.95)">
+    <div class="flex items-center justify-between">
+      <h3 class="font-extrabold">⚙ الإعدادات</h3>
+      <button id="settingsClose" class="icon-btn">✕</button>
+    </div>
+    <div class="space-y-3">
+      <label class="flex items-center gap-2 text-sm font-semibold"><input type="checkbox" id="sbEnabled" class="accent-cyan-400"> مزامنة مع Supabase (اختياري)</label>
+      <input id="sbUrl" class="input" dir="ltr" style="text-align:left" placeholder="https://xxxx.supabase.co">
+      <input id="sbKey" class="input" dir="ltr" style="text-align:left" type="password" placeholder="anon / service key">
+      <input id="sbTable" class="input" dir="ltr" style="text-align:left" placeholder="pulse_products">
+      <div class="text-[11px] text-slate-400">أنشئ الجدول مرة واحدة من SQL Editor (السياسة أدناه مفتوحة، فاستخدم مشروعاً خاصاً بك):</div>
+<pre class="sql">create table if not exists pulse_products (
+  sku text primary key,
+  data jsonb not null,
+  updated_at timestamptz default now());
+alter table pulse_products enable row level security;
+create policy "pulse open" on pulse_products
+  for all using (true) with check (true);</pre>
+      <div id="sbStatus" class="text-[11px] text-slate-400"></div>
+    </div>
+    <div class="flex flex-wrap gap-2 justify-between pt-2">
+      <button id="clearBtn" class="btn" style="color:#ff9aaa;border-color:rgba(255,77,109,.4)">🗑 مسح كل البيانات</button>
+      <button id="settingsSave" class="btn btn-cyan">حفظ</button>
+    </div>
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+
+/* ============================== helpers ============================== */
+const LOW = 5;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmtNum = (n, d = 0) => (n == null || !isFinite(n)) ? '—' : Number(n).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d });
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function fmtTime(t) {
+  const d = new Date(t);
+  let h = d.getHours();
+  const ap = h >= 12 ? 'م' : 'ص';
+  h = h % 12 || 12;
+  const time = h + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + ap;
+  const today = new Date();
+  const same = d.getDate() === today.getDate() && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+  return same ? time : d.getDate() + '/' + (d.getMonth() + 1) + ' ' + time;
+}
+function fmtWindow(pk) { return 'من الساعة ' + fmtTime(pk.from) + ' إلى ' + fmtTime(pk.to); }
+function fmtDur(h) {
+  if (h == null || !isFinite(h)) return '—';
+  if (h <= 0) return 'نفد';
+  if (h < 1) return 'أقل من ساعة';
+  if (h < 48) return fmtNum(h, 1) + ' ساعة';
+  return fmtNum(h / 24, 1) + ' يوم';
+}
+function toast(msg, kind = 'ok', ms = 3800) {
+  const el = document.createElement('div');
+  el.className = 'toast ' + kind;
+  el.textContent = msg;
+  $('toasts').append(el);
+  setTimeout(() => el.remove(), ms);
+}
+
+/* ============================== state ============================== */
+const state = {
+  mode: 'none',          // 'ext' | 'demo'
+  demoPinned: false,     // user explicitly asked for demo data while connected
+  products: [],
+  selected: null,
+  query: '',
+  settings: {},
+  meta: {},
+  demoNow: Date.now(),
+  demoTimer: null,
+  lastSyncAt: null,
+  now() { return this.mode === 'demo' ? this.demoNow : Date.now(); }
+};
+
+/* ============================ metrics engine ============================ */
+// Mirrors the extension's algorithm so demo data and real data behave identically.
+function velocityOf(p, now) {
+  const ws = now - 6 * 3600e3;
+  let sold = 0;
+  for (const e of p.events || []) {
+    if (e.t1 < ws) continue;
+    const dt = Math.max(e.t1 - e.t0, 1);
+    sold += e.sold * Math.min(1, (e.t1 - Math.max(e.t0, ws)) / dt);
+  }
+  const first = p.firstSeen || (p.history[0] && p.history[0].t) || now;
+  const hours = Math.max((now - Math.max(ws, first)) / 3.6e6, 0.25);
+  return Math.round(sold / hours * 100) / 100;
+}
+function computePeak(events) {
+  let best = null;
+  for (let i = 0; i < events.length; i++) {
+    const end = events[i].t1;
+    let sold = 0, from = end;
+    for (let j = i; j >= 0; j--) {
+      const e = events[j];
+      if (e.t1 <= end - 3600e3) break;
+      sold += e.sold;
+      if (e.t0 < from) from = e.t0;
+    }
+    const rate = sold / Math.max((end - from) / 3.6e6, 0.25);
+    if (!best || rate > best.rate || (rate === best.rate && sold > best.sold)) best = { from, to: end, sold, rate: Math.round(rate * 100) / 100 };
+  }
+  return best;
+}
+function prepare(p) {
+  p.history = Array.isArray(p.history) ? p.history : [];
+  p.events = Array.isArray(p.events) ? p.events : [];
+  p.totalSold = p.totalSold || 0;
+  p.totalRevenue = p.totalRevenue || 0;
+  p.velocityPerHour = velocityOf(p, state.now());
+  if (p.stock === 0) p.hoursLeft = 0;
+  else if (p.stock != null && p.velocityPerHour > 0) p.hoursLeft = p.stock / p.velocityPerHour;
+  else p.hoursLeft = null;
+  return p;
+}
+function sortedList() {
+  const q = state.query.trim().toLowerCase();
+  return state.products.map(prepare)
+    .filter((p) => !q || (p.title || '').toLowerCase().includes(q) || (p.sku || '').toLowerCase().includes(q) || (p.seller || '').toLowerCase().includes(q))
+    .sort((a, b) => b.velocityPerHour - a.velocityPerHour || b.totalSold - a.totalSold);
+}
+
+/* ============================ extension bridge ============================ */
+const Bridge = {
+  connected: false, version: null, pending: new Map(), seq: 0, syncWaiters: [],
+  post(m) { window.postMessage(m, location.protocol === 'file:' ? '*' : location.origin); },
+  ping() { this.post({ type: 'PULSE_PING' }); },
+  sync() {
+    return new Promise((resolve) => {
+      this.syncWaiters.push(resolve);
+      this.post({ type: 'PULSE_SYNC_REQUEST' });
+      setTimeout(() => resolve(false), 8000);
+    });
+  },
+  command(command, args = {}, timeout = 25000) {
+    return new Promise((resolve, reject) => {
+      if (!this.connected) return reject(new Error('الإضافة غير متصلة'));
+      const id = 'r' + (++this.seq);
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error('انتهت مهلة الاستجابة')); }, timeout);
+      this.pending.set(id, { resolve, reject, timer });
+      this.post({ type: 'PULSE_COMMAND', command, args, reqId: id });
+    });
+  },
+  init() {
+    window.addEventListener('message', (e) => {
+      if (e.source !== window) return;
+      const m = e.data;
+      if (!m || typeof m !== 'object') return;
+      if (m.type === 'PULSE_PONG') onPong(m);
+      else if (m.type === 'PULSE_SYNC_RESPONSE') onSync(m);
+      else if (m.type === 'PULSE_COMMAND_RESULT') {
+        const w = this.pending.get(m.reqId);
+        if (!w) return;
+        clearTimeout(w.timer);
+        this.pending.delete(m.reqId);
+        m.ok ? w.resolve(m.result) : w.reject(new Error(m.error || 'فشل الأمر'));
+      }
+    });
+  }
+};
+
+function onPong(m) {
+  const first = !Bridge.connected;
+  Bridge.connected = true;
+  Bridge.version = m.version || null;
+  if (first && !state.demoPinned) {
+    stopDemo();
+    setMode('ext');
+    Bridge.sync().then(registerDashboard);
+  } else {
+    updateStatus();
+  }
+}
+function onSync(m) {
+  const waiters = Bridge.syncWaiters.splice(0);
+  if (m.error) { waiters.forEach((w) => w(false)); toast('تعذّرت المزامنة: ' + m.error, 'err'); return; }
+  const payload = m.payload || {};
+  state.settings = payload.pulse_settings || {};
+  state.meta = payload.pulse_meta || {};
+  if (!(state.mode === 'demo' && state.demoPinned)) {
+    if (state.mode !== 'ext') setMode('ext');
+    state.products = Object.values(payload.pulse_db || {});
+    state.lastSyncAt = Date.now();
+    if (state.selected && !state.products.some((p) => p.sku === state.selected)) state.selected = null;
+    if (!state.selected) { const l = sortedList(); state.selected = l[0] ? l[0].sku : null; }
+    renderAll();
+  }
+  waiters.forEach((w) => w(true));
+}
+function registerDashboard() {
+  // Lets the extension icon open this dashboard in one click.
+  if (state.settings.dashboardUrl !== location.href && /^(https?|file):/.test(location.protocol)) {
+    Bridge.command('SET_SETTINGS', { settings: { dashboardUrl: location.href } }).catch(() => {});
+  }
+}
+
+/* ============================== mode / status ============================== */
+function setMode(mode) {
+  state.mode = mode;
+  updateStatus();
+  $('connBanner').classList.toggle('hidden', !(mode === 'demo' && !Bridge.connected) || bannerDismissed);
+}
+let bannerDismissed = false;
+function updateStatus() {
+  const dot = $('statusDot'), txt = $('statusText');
+  if (state.mode === 'ext') {
+    dot.className = 'dot live';
+    txt.textContent = 'متصل بالإضافة' + (Bridge.version ? ' · v' + Bridge.version : '');
+  } else if (state.mode === 'demo') {
+    dot.className = 'dot demo';
+    txt.textContent = Bridge.connected ? 'وضع المحاكاة (عرض تجريبي مؤقت)' : 'وضع المحاكاة · الإضافة غير متصلة';
+  } else {
+    dot.className = 'dot demo';
+    txt.textContent = 'جارٍ فحص الاتصال…';
+  }
+}
+
+/* ============================== rendering ============================== */
+function stockBadge(p) {
+  if (p.stock == null) return '<span class="badge b-mute">غير متاح</span>';
+  if (p.stock <= 0) return '<span class="badge b-danger">⛔ نفد</span>';
+  if (p.stock < LOW) return '<span class="badge b-danger">⚠ ' + fmtNum(p.stock) + ' متبقي</span>';
+  if (p.stock < 20) return '<span class="badge b-warn">' + fmtNum(p.stock) + '</span>';
+  return '<span class="badge b-ok">' + fmtNum(p.stock) + '</span>';
+}
+function priceCell(p) {
+  if (p.price == null) return '<span class="text-slate-500">—</span>';
+  let h = '<div class="font-bold">' + fmtNum(p.price) + ' <span class="text-[11px] text-slate-400">ج.م</span></div>';
+  if (p.regularPrice != null && p.regularPrice > p.price) {
+    const off = Math.round((1 - p.price / p.regularPrice) * 100);
+    h += '<div class="text-[11px] text-slate-500"><s>' + fmtNum(p.regularPrice) + '</s> <span class="text-emerald-400 font-bold">-' + off + '%</span></div>';
+  }
+  return h;
+}
+
+function renderAll() {
+  renderKPIs();
+  renderTable();
+  renderInspector();
+  $('lastSync').textContent = state.mode === 'demo'
+    ? 'بيانات تجريبية (محاكاة)'
+    : (state.lastSyncAt ? 'آخر مزامنة ' + fmtTime(state.lastSyncAt) : '—') + (state.meta.lastRefresh ? ' · آخر فحص تلقائي ' + fmtTime(state.meta.lastRefresh) : '');
+}
+
+function renderKPIs() {
+  const list = state.products.map(prepare);
+  const top = list.slice().sort((a, b) => b.velocityPerHour - a.velocityPerHour)[0];
+  const alerts = list.filter((p) => p.stock != null && p.stock < LOW);
+  const radar = list.filter((p) => p.radar).length;
+  $('kpiCount').textContent = fmtNum(list.length);
+  $('kpiCountSub').textContent = radar + ' منها في الرادار التلقائي';
+  $('kpiFast').textContent = top && top.velocityPerHour > 0 ? fmtNum(top.velocityPerHour, 1) : '—';
+  $('kpiFastSub').textContent = top && top.velocityPerHour > 0 ? top.title : 'لا توجد مبيعات مرصودة بعد';
+  $('kpiRev').textContent = fmtNum(list.reduce((s, p) => s + (p.totalRevenue || 0), 0));
+  $('kpiRevSub').textContent = fmtNum(list.reduce((s, p) => s + (p.totalSold || 0), 0)) + ' وحدة مباعة (مرصودة)';
+  $('kpiAlerts').textContent = fmtNum(alerts.length);
+  $('kpiAlertsSub').textContent = alerts.length ? alerts.slice(0, 2).map((p) => p.title.slice(0, 22)).join(' · ') : 'لا توجد منتجات حرجة';
+}
+
+function renderTable() {
+  const list = sortedList();
+  const maxV = Math.max(...list.map((p) => p.velocityPerHour), 0.0001);
+  $('emptyState').classList.toggle('hidden', list.length > 0);
+  $('tbody').innerHTML = list.map((p, i) => {
+    const link = p.url && /^https?:/.test(p.url) ? '<a href="' + esc(p.url) + '" target="_blank" rel="noopener" class="icon-btn" style="color:#94a3b8" title="فتح في نون" onclick="event.stopPropagation()">↗</a>' : '';
+    return '<tr class="row' + (p.sku === state.selected ? ' sel' : '') + '" data-sku="' + esc(p.sku) + '">' +
+      '<td class="rank">' + (i + 1) + '</td>' +
+      '<td><div class="clamp2 font-semibold text-slate-100">' + esc(p.title) + (p.radar ? ' <span title="في الرادار التلقائي" class="text-cyan-300">📡</span>' : '') + '</div>' +
+        '<div class="text-[11px] text-slate-500 font-mono mt-0.5" dir="ltr" style="text-align:right">' + esc(p.sku) + '</div>' +
+        (p.lastError ? '<div class="text-[11px] text-amber-400 mt-0.5">⚠ ' + esc(p.lastError).slice(0, 70) + '</div>' : '') + '</td>' +
+      '<td class="text-slate-300">' + esc(p.seller || '—') + '</td>' +
+      '<td>' + priceCell(p) + '</td>' +
+      '<td>' + stockBadge(p) + '</td>' +
+      '<td class="font-bold" style="color:var(--purple)">' + fmtNum(p.totalSold) + '</td>' +
+      '<td><div class="font-extrabold" style="color:var(--cyan)">' + fmtNum(p.velocityPerHour, 2) + '</div><div class="vel-bar"><i style="width:' + Math.round(p.velocityPerHour / maxV * 100) + '%"></i></div></td>' +
+      '<td class="text-xs text-slate-300">' + (p.peak ? esc(fmtWindow(p.peak)) + '<div class="text-[11px] text-slate-500">' + fmtNum(p.peak.sold) + ' وحدة · ' + fmtNum(p.peak.rate, 1) + '/ساعة</div>' : '<span class="text-slate-500">—</span>') + '</td>' +
+      '<td class="font-bold ' + (p.hoursLeft != null && p.hoursLeft < 6 ? 'text-rose-300' : '') + '">' + fmtDur(p.hoursLeft) + '</td>' +
+      '<td style="white-space:nowrap">' + link + '<span class="icon-btn" data-del="' + esc(p.sku) + '" title="حذف">🗑</span></td>' +
+      '</tr>';
+  }).join('');
+}
+
+/* ============================== inspector ============================== */
+function selectedProduct() { return state.products.find((p) => p.sku === state.selected) || null; }
+
+function renderInspector() {
+  const p = selectedProduct();
+  chart.p = p ? prepare(p) : null;
+  if (!p) {
+    $('inspHead').innerHTML = '<div class="text-slate-400 text-sm">اختر منتجاً من الجدول لعرض منحنى المخزون والسعر وتوصية الدخول.</div>';
+    $('insightBox').innerHTML = '';
+    drawChart();
+    return;
+  }
+  $('inspHead').innerHTML =
+    '<div class="flex flex-wrap items-start justify-between gap-3">' +
+      '<div><h3 class="text-base md:text-lg font-extrabold">' + esc(p.title) + '</h3>' +
+      '<div class="text-xs text-slate-400 mt-1"><span class="font-mono" dir="ltr">' + esc(p.sku) + '</span> · ' + esc(p.seller || 'بائع غير معروف') +
+      (p.rating != null ? ' · ⭐ ' + fmtNum(p.rating, 1) + (p.reviews ? ' (' + fmtNum(p.reviews) + ')' : '') : '') + '</div></div>' +
+      '<div class="flex flex-wrap gap-2 text-xs">' +
+        '<span class="badge b-ok">المخزون ' + (p.stock != null ? fmtNum(p.stock) : '—') + '</span>' +
+        '<span class="badge b-mute">السعر ' + (p.price != null ? fmtNum(p.price) + ' ج.م' : '—') + '</span>' +
+        '<span class="badge b-mute">السرعة ' + fmtNum(p.velocityPerHour, 2) + '/س</span>' +
+      '</div></div>';
+  renderInsight(p);
+  drawChart();
+}
+
+function buildInsight(p) {
+  const now = state.now();
+  const v = p.velocityPerHour, s = p.stock, hl = p.hoursLeft;
+  const first = p.firstSeen || (p.history[0] && p.history[0].t) || now;
+  const obs = (now - first) / 3.6e6;
+  const prices = p.history.map((h) => h.price).filter((x) => x != null);
+  const pc = prices.length > 1 && prices[0] > 0 ? (prices[prices.length - 1] - prices[0]) / prices[0] * 100 : 0;
+
+  const bullets = [];
+  bullets.push('سرعة البيع: ' + fmtNum(v, 2) + ' وحدة/ساعة (آخر 6 ساعات).');
+  if (s != null) bullets.push(hl == null ? 'المتبقي ' + fmtNum(s) + ' وحدة، ولا توجد مبيعات كافية لتقدير موعد النفاد.' : 'المتبقي ' + fmtNum(s) + ' وحدة — تكفي نحو ' + fmtDur(hl) + ' بنفس الوتيرة.');
+  if (p.peak) bullets.push('ذروة الطلب ' + fmtWindow(p.peak) + ' (' + fmtNum(p.peak.sold) + ' وحدة). انشر المحتوى قبلها بنحو نصف ساعة.');
+  if (Math.abs(pc) >= 1) bullets.push(pc < 0 ? 'السعر انخفض ' + fmtNum(Math.abs(pc), 1) + '% خلال فترة الرصد — الخصم يدعم الطلب.' : 'السعر ارتفع ' + fmtNum(pc, 1) + '% خلال فترة الرصد.');
+  if (p.rating != null) bullets.push('التقييم ' + fmtNum(p.rating, 1) + '/5' + (p.reviews ? ' من ' + fmtNum(p.reviews) + ' مراجعة.' : '.'));
+
+  let score = clamp(v / 4, 0, 1) * 55;
+  score += hl == null ? 0 : hl < 6 ? 10 : hl <= 96 ? 25 : 15;
+  if (pc <= -3 && v >= 0.5) score += 10;
+  if (p.rating != null && p.rating >= 4.2) score += 10;
+  score = Math.round(clamp(score, 0, 100));
+
+  let tone, title, action;
+  if (s === 0) {
+    tone = 'wait'; title = '⛔ نفد المخزون'; action = 'لا تروّج له الآن. انتظر إعادة التوريد (الرادار سيلتقطها تلقائياً).';
+  } else if (p.history.length < 3 || (obs < 1 && p.totalSold === 0)) {
+    tone = 'wait'; title = '⏳ بيانات غير كافية'; action = 'أضِفه للرادار التلقائي واترك المراقبة تعمل بضع ساعات للحصول على قراءة موثوقة.';
+  } else if (v < 0.15 && obs >= 3) {
+    tone = 'skip'; title = '❄️ طلب ضعيف'; action = 'لا يستحق الجهد الآن. ابحث عن منتج بسرعة بيع أعلى.';
+  } else if (hl != null && hl < 6) {
+    tone = 'hurry'; title = '⚠️ فرصة قصيرة — تحرّك فوراً أو تجاهله';
+    action = 'المخزون ينفد خلال ' + fmtDur(hl) + '. ادخل الآن فقط إذا كان المحتوى/الإعلان جاهزاً؛ العمولة تتوقف بمجرد النفاد.';
+  } else if (v >= 1 && (hl == null || hl <= 96)) {
+    tone = 'go'; title = '🔥 ادخل الآن'; action = 'طلب قوي ومخزون يكفي لنافذة بيع مجدية. ابدأ الحملة قبل الذروة القادمة.';
+  } else {
+    tone = 'ok'; title = '✅ طلب ثابت ومخزون وفير'; action = 'مناسب لحملة مستدامة منخفضة المخاطر؛ لا داعي للاستعجال.';
+  }
+  return { tone, title, action, bullets, score };
+}
+
+function renderInsight(p) {
+  const i = buildInsight(p);
+  $('insightBox').innerHTML =
+    '<div class="insight ins-' + i.tone + '">' +
+      '<div class="text-xs text-slate-400 font-bold mb-1">توصية للبائع / المسوّق بالعمولة</div>' +
+      '<div class="text-lg font-extrabold mb-2">' + esc(i.title) + '</div>' +
+      '<div class="flex items-center gap-2 mb-1 text-xs text-slate-300"><span>درجة الفرصة</span><b>' + i.score + '/100</b></div>' +
+      '<div class="score-bar mb-3"><i style="width:' + i.score + '%"></i></div>' +
+      '<p class="text-sm leading-relaxed mb-3">' + esc(i.action) + '</p>' +
+      '<ul class="text-xs text-slate-300 space-y-1.5 list-disc pr-4">' + i.bullets.map((b) => '<li>' + esc(b) + '</li>').join('') + '</ul>' +
+    '</div>';
+}
+
+/* ============================ canvas chart ============================ */
+const chart = { p: null, geo: null, hover: null, raf: 0 };
+
+function niceMax(v) {
+  const mag = Math.pow(10, Math.floor(Math.log10(Math.max(v, 1))));
+  const n = v / mag;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+}
+
+function drawChart() {
+  const cv = $('chart');
+  const wrap = $('chartWrap');
+  const W = Math.max(wrap.clientWidth, 300), H = 360;
+  const dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(W * dpr) || cv.height !== Math.round(H * dpr)) {
+    cv.width = Math.round(W * dpr);
+    cv.height = Math.round(H * dpr);
+    cv.style.width = W + 'px';
+    cv.style.height = H + 'px';
+  }
+  const g = cv.getContext('2d');
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, W, H);
+  const tip = $('chartTip');
+
+  const p = chart.p;
+  const pts = p ? p.history.filter((x) => x && x.t).slice().sort((a, b) => a.t - b.t) : [];
+  if (!p || pts.length < 2) {
+    g.fillStyle = '#64748b';
+    g.font = '14px Cairo, sans-serif';
+    g.textAlign = 'center';
+    g.fillText(p ? 'لا توجد قراءات كافية بعد — سيظهر المنحنى بعد قراءتين على الأقل' : 'اختر منتجاً لعرض الرسم البياني', W / 2, H / 2);
+    chart.geo = null;
+    tip.style.display = 'none';
+    return;
+  }
+
+  const L = 54, R = 58, T = 24, B = 46;
+  const iw = W - L - R, ih = H - T - B;
+  let t0 = pts[0].t, t1 = pts[pts.length - 1].t;
+  if (t1 === t0) t1 = t0 + 3600e3;
+  const X = (t) => L + (t - t0) / (t1 - t0) * iw;
+
+  const stockPts = pts.filter((x) => x.stock != null);
+  const pricePts = pts.filter((x) => x.price != null);
+  const sMax = niceMax(Math.max(1, ...stockPts.map((x) => x.stock)) * 1.05);
+  const YS = (v) => T + ih - (v / sMax) * ih;
+  let pMin = pricePts.length ? Math.min(...pricePts.map((x) => x.price)) : 0;
+  let pMax = pricePts.length ? Math.max(...pricePts.map((x) => x.price)) : 1;
+  if (pMin === pMax) { pMin = pMin * 0.95; pMax = pMax * 1.05 || 1; }
+  else { const pad = (pMax - pMin) * 0.18; pMin -= pad; pMax += pad; }
+  const YP = (v) => T + ih - (v - pMin) / (pMax - pMin) * ih;
+
+  // grid + axis labels
+  g.font = '11px Cairo, sans-serif';
+  g.lineWidth = 1;
+  for (let i = 0; i <= 5; i++) {
+    const y = T + ih * i / 5;
+    g.strokeStyle = 'rgba(255,255,255,.07)';
+    g.beginPath(); g.moveTo(L, y); g.lineTo(W - R, y); g.stroke();
+    g.textAlign = 'right'; g.fillStyle = 'rgba(0,245,212,.85)';
+    g.fillText(fmtNum(sMax * (1 - i / 5), sMax < 10 ? 1 : 0), L - 8, y + 4);
+    if (pricePts.length) {
+      g.textAlign = 'left'; g.fillStyle = 'rgba(168,85,247,.95)';
+      g.fillText(fmtNum(pMin + (pMax - pMin) * (1 - i / 5)), W - R + 8, y + 4);
+    }
+  }
+  // time ticks
+  const spanH = (t1 - t0) / 3.6e6;
+  g.textAlign = 'center';
+  for (let i = 0; i <= 5; i++) {
+    const t = t0 + (t1 - t0) * i / 5, x = X(t), d = new Date(t);
+    let hh = d.getHours(); const ap = hh >= 12 ? 'م' : 'ص'; hh = hh % 12 || 12;
+    g.fillStyle = '#94a3b8';
+    g.fillText(hh + ':' + String(d.getMinutes()).padStart(2, '0') + ' ' + ap, x, H - B + 16);
+    if (spanH > 20) { g.fillStyle = '#64748b'; g.fillText(d.getDate() + '/' + (d.getMonth() + 1), x, H - B + 30); }
+    g.strokeStyle = 'rgba(255,255,255,.04)';
+    g.beginPath(); g.moveTo(x, T); g.lineTo(x, T + ih); g.stroke();
+  }
+
+  // peak band
+  if (p.peak && p.peak.to >= t0 && p.peak.from <= t1) {
+    const x1 = X(Math.max(p.peak.from, t0)), x2 = Math.max(X(Math.min(p.peak.to, t1)), x1 + 4);
+    g.fillStyle = 'rgba(168,85,247,.14)';
+    g.fillRect(x1, T, x2 - x1, ih);
+    g.strokeStyle = 'rgba(168,85,247,.5)';
+    g.setLineDash([4, 4]);
+    g.strokeRect(x1, T, x2 - x1, ih);
+    g.setLineDash([]);
+    g.fillStyle = '#d8b4fe'; g.textAlign = 'center';
+    g.fillText('ذروة الطلب', (x1 + x2) / 2, T + 12);
+  }
+
+  // stock area + line
+  if (stockPts.length > 1) {
+    const grad = g.createLinearGradient(0, T, 0, T + ih);
+    grad.addColorStop(0, 'rgba(0,245,212,.28)');
+    grad.addColorStop(1, 'rgba(0,245,212,0)');
+    g.beginPath();
+    stockPts.forEach((q, i) => (i ? g.lineTo(X(q.t), YS(q.stock)) : g.moveTo(X(q.t), YS(q.stock))));
+    g.lineTo(X(stockPts[stockPts.length - 1].t), T + ih);
+    g.lineTo(X(stockPts[0].t), T + ih);
+    g.closePath();
+    g.fillStyle = grad; g.fill();
+    g.save();
+    g.shadowColor = 'rgba(0,245,212,.8)'; g.shadowBlur = 10;
+    g.strokeStyle = '#00f5d4'; g.lineWidth = 2.4; g.lineJoin = 'round';
+    g.beginPath();
+    stockPts.forEach((q, i) => (i ? g.lineTo(X(q.t), YS(q.stock)) : g.moveTo(X(q.t), YS(q.stock))));
+    g.stroke();
+    g.restore();
+  }
+  // price stepped line
+  if (pricePts.length > 1) {
+    g.save();
+    g.shadowColor = 'rgba(168,85,247,.8)'; g.shadowBlur = 10;
+    g.strokeStyle = '#a855f7'; g.lineWidth = 2.2;
+    g.beginPath();
+    pricePts.forEach((q, i) => {
+      const x = X(q.t), y = YP(q.price);
+      if (!i) g.moveTo(x, y);
+      else { g.lineTo(x, YP(pricePts[i - 1].price)); g.lineTo(x, y); }
+    });
+    g.stroke();
+    g.restore();
+  }
+  if (pts.length <= 70) {
+    g.fillStyle = '#00f5d4';
+    stockPts.forEach((q) => { g.beginPath(); g.arc(X(q.t), YS(q.stock), 2.2, 0, 6.2832); g.fill(); });
+  }
+
+  chart.geo = { pts: pts.map((q) => ({ ...q, px: X(q.t) })), L, R, T, B, W, H, YS, YP, iw, ih };
+
+  // hover crosshair
+  const hv = chart.hover != null ? chart.geo.pts[chart.hover] : null;
+  if (hv) {
+    g.strokeStyle = 'rgba(255,255,255,.35)'; g.lineWidth = 1; g.setLineDash([3, 3]);
+    g.beginPath(); g.moveTo(hv.px, T); g.lineTo(hv.px, T + ih); g.stroke(); g.setLineDash([]);
+    if (hv.stock != null) { g.fillStyle = '#00f5d4'; g.beginPath(); g.arc(hv.px, YS(hv.stock), 5, 0, 6.2832); g.fill(); }
+    if (hv.price != null) { g.fillStyle = '#a855f7'; g.beginPath(); g.arc(hv.px, YP(hv.price), 5, 0, 6.2832); g.fill(); }
+    const idx = chart.hover, prev = idx > 0 ? chart.geo.pts[idx - 1] : null;
+    let delta = '';
+    if (prev && prev.stock != null && hv.stock != null && hv.stock !== prev.stock) {
+      delta = '<div class="' + (hv.stock < prev.stock ? 'text-rose-300' : 'text-emerald-300') + '">' + (hv.stock < prev.stock ? '▼ بيع ' + (prev.stock - hv.stock) : '▲ إعادة توريد +' + (hv.stock - prev.stock)) + '</div>';
+    }
+    tip.innerHTML = '<div class="text-slate-400 mb-1">' + esc(fmtTime(hv.t)) + '</div>' +
+      '<div>المخزون: <b style="color:#00f5d4">' + (hv.stock != null ? fmtNum(hv.stock) : '—') + '</b></div>' +
+      '<div>السعر: <b style="color:#d8b4fe">' + (hv.price != null ? fmtNum(hv.price) + ' ج.م' : '—') + '</b></div>' + delta;
+    tip.style.display = 'block';
+    const tw = tip.offsetWidth || 160;
+    let left = hv.px + 14; if (left + tw > W - 4) left = hv.px - tw - 14;
+    tip.style.left = Math.max(4, left) + 'px';
+    tip.style.top = (T + 8) + 'px';
+  } else {
+    tip.style.display = 'none';
+  }
+}
+
+function scheduleDraw() {
+  if (chart.raf) return;
+  chart.raf = requestAnimationFrame(() => { chart.raf = 0; drawChart(); });
+}
+(function bindChart() {
+  const cv = $('chart');
+  cv.addEventListener('pointermove', (e) => {
+    if (!chart.geo) return;
+    const mx = e.clientX - cv.getBoundingClientRect().left;
+    let best = 0, bd = Infinity;
+    chart.geo.pts.forEach((q, i) => { const d = Math.abs(q.px - mx); if (d < bd) { bd = d; best = i; } });
+    if (chart.hover !== best) { chart.hover = best; scheduleDraw(); }
+  });
+  cv.addEventListener('pointerleave', () => { chart.hover = null; scheduleDraw(); });
+  window.addEventListener('resize', scheduleDraw);
+  if (window.ResizeObserver) new ResizeObserver(scheduleDraw).observe($('chartWrap'));
+})();
+
+/* ============================== demo engine ============================== */
+function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function poisson(l) {
+  if (l <= 0) return 0;
+  if (l > 30) return Math.max(0, Math.round(l + Math.sqrt(l) * gauss()));
+  const L = Math.exp(-l); let k = 0, p = 1;
+  do { k++; p *= Math.random(); } while (p > L);
+  return k - 1;
+}
+const hourMult = (h) => (h >= 20 && h <= 23) ? 2.3 : (h >= 12 && h <= 15) ? 1.35 : (h >= 1 && h <= 6) ? 0.2 : 0.85;
+
+const DEMO_DEFS = [
+  { title: 'سماعة بلوتوث لاسلكية TWS Pro مع علبة شحن — إصدار 5.3', seller: 'TechZone Egypt', price: 549, reg: 899, rate: 4.2, endStock: 38, burst: 3, rating: 4.4, reviews: 1287 },
+  { title: 'ساعة ذكية Ultra Fit مقاومة للماء بشاشة AMOLED', seller: 'Smart Hub', price: 1199, reg: 1799, rate: 2.6, endStock: 4, burst: 2.5, rating: 4.1, reviews: 642 },
+  { title: 'باور بانك 20000 مللي أمبير شحن سريع 22.5 وات', seller: 'Anker Official Store', price: 699, reg: 849, rate: 1.7, endStock: 62, burst: 2, rating: 4.7, reviews: 3120 },
+  { title: 'مكنسة روبوت ذكية بخاصية المسح والتنظيف', seller: 'HomeTech EG', price: 4299, reg: 6200, rate: 0.9, endStock: 7, burst: 3, rating: 4.0, reviews: 211, restockAt: 0.5, restockQty: 25 },
+  { title: 'شاشة ذكية 55 بوصة 4K UHD مع ريسيفر داخلي', seller: 'Nile Electronics', price: 13999, reg: 17500, rate: 0.35, endStock: 14, burst: 2, rating: 4.3, reviews: 98 },
+  { title: 'خلاط كهربائي متعدد الاستخدام 1000 وات مع 3 أوعية', seller: 'Kitchen Plus', price: 899, reg: 1299, rate: 1.2, endStock: 85, burst: 2, rating: 4.5, reviews: 1780 },
+  { title: 'حذاء رياضي رجالي خفيف للجري — مقاس 42', seller: 'SportsLine', price: 749, reg: 1099, rate: 0.12, endStock: 51, burst: 1.5, rating: 3.9, reviews: 76 },
+  { title: 'عطر رجالي 100 مل — أو دو بارفان', seller: 'Scent Gallery', price: 399, reg: 650, rate: 2.0, endStock: 2, burst: 3.5, rating: 4.6, reviews: 934 }
+];
+
+function deriveFromHistory(p) {
+  const ev = []; let tot = 0, rev = 0;
+  for (let i = 1; i < p.history.length; i++) {
+    const a = p.history[i - 1], b = p.history[i];
+    if (a.stock != null && b.stock != null && b.stock < a.stock) {
+      const s = a.stock - b.stock;
+      ev.push({ t0: a.t, t1: b.t, sold: s, price: b.price });
+      tot += s; rev += s * (b.price || 0);
+    }
+  }
+  p.events = ev; p.totalSold = tot; p.totalRevenue = rev; p.peak = computePeak(ev);
+}
+
+function genDemoProduct(def, i, now) {
+  const STEP = 30 * 60000, N = 144, start = now - (N - 1) * STEP;
+  const burstAt = 10 + Math.floor(Math.random() * (N - 40));
+  const burstLen = 4 + Math.floor(Math.random() * 4);
+  const sold = [], rest = [];
+  for (let k = 0; k < N; k++) {
+    let m = hourMult(new Date(start + k * STEP).getHours());
+    if (k >= burstAt && k < burstAt + burstLen) m *= def.burst;
+    sold.push(k === 0 ? 0 : poisson(def.rate * 0.5 * m));
+    rest.push(0);
+  }
+  if (def.restockAt) rest[Math.floor(N * def.restockAt)] = def.restockQty;
+  const cum = []; let c = 0;
+  for (let k = 0; k < N; k++) { c += rest[k] - sold[k]; cum.push(c); }
+  let s0 = def.endStock - cum[N - 1];
+  const minV = Math.min(...cum.map((v) => s0 + v));
+  if (minV < 0) s0 -= minV;
+  let price = Math.round(def.price * (1.06 + Math.random() * 0.06));
+  const changes = { [28]: 1, [66]: 1, [N - 22]: 1 };
+  const history = [];
+  for (let k = 0; k < N; k++) {
+    if (changes[k]) price = k === N - 22 ? def.price : Math.round(price * (1 + (Math.random() - 0.55) * 0.1));
+    history.push({ t: start + k * STEP, stock: s0 + cum[k], price });
+  }
+  const p = {
+    sku: 'DEMO-' + String(i + 1).padStart(3, '0'),
+    title: def.title, seller: def.seller, url: null,
+    price: def.price, salePrice: def.price, regularPrice: def.reg,
+    stock: history[N - 1].stock, rating: def.rating, reviews: def.reviews,
+    history, firstSeen: start, lastSeen: now, radar: i % 2 === 0, _rate: def.rate
+  };
+  deriveFromHistory(p);
+  return p;
+}
+
+function startDemo() {
+  stopDemo();
+  state.demoNow = Date.now();
+  state.products = DEMO_DEFS.map((d, i) => genDemoProduct(d, i, state.demoNow));
+  state.selected = sortedList()[0].sku;
+  state.lastSyncAt = null;
+  renderAll();
+  state.demoTimer = setInterval(demoTick, 2500);
+}
+function stopDemo() { if (state.demoTimer) { clearInterval(state.demoTimer); state.demoTimer = null; } }
+
+function demoTick() {
+  if (state.mode !== 'demo') return stopDemo();
+  state.demoNow += 15 * 60000;
+  const now = state.demoNow, hr = new Date(now).getHours();
+  state.products.forEach((p) => {
+    const prev = p.stock;
+    let s = Math.min(prev, poisson((p._rate || 1) * 0.25 * hourMult(hr)));
+    let next = prev - s;
+    if (next <= 0 && Math.random() < 0.18) next = 40 + Math.floor(Math.random() * 80);
+    if (Math.random() < 0.015) p.price = Math.max(1, Math.round(p.price * (1 + (Math.random() - 0.5) * 0.08)));
+    p.stock = next;
+    if (s > 0) {
+      p.events.push({ t0: p.history[p.history.length - 1].t, t1: now, sold: s, price: p.price });
+      p.totalSold += s; p.totalRevenue += s * p.price;
+      if (p.events.length > 400) p.events.shift();
+      p.peak = computePeak(p.events);
+    }
+    p.history.push({ t: now, stock: p.stock, price: p.price });
+    if (p.history.length > 600) p.history.shift();
+    p.lastSeen = now;
+  });
+  renderAll();
+}
+
+/* ============================== actions ============================== */
+async function liveSync() {
+  const btn = $('syncBtn');
+  btn.disabled = true;
+  const old = btn.innerHTML;
+  btn.innerHTML = '<span class="spin"></span> جارٍ المزامنة';
+  try {
+    if (!Bridge.connected) {
+      Bridge.ping();
+      await sleep(700);
+      if (!Bridge.connected) { toast('الإضافة غير متصلة — تعرض اللوحة بيانات تجريبية.', 'warn'); return; }
+    }
+    state.demoPinned = false;
+    stopDemo();
+    if (state.mode !== 'ext') setMode('ext');
+    try {
+      toast('جارٍ فحص منتجات الرادار في الخلفية…', 'ok', 2500);
+      const r = await Bridge.command('FORCE_REFRESH', {}, 150000);
+      if (r && r.refresh) toast('تم فحص ' + r.refresh.checked + ' منتج' + (r.refresh.failed ? ' · فشل ' + r.refresh.failed : ''), r.refresh.failed ? 'warn' : 'ok');
+    } catch (e) { toast('تعذّر التحديث الفوري: ' + e.message, 'warn'); }
+    const ok = await Bridge.sync();
+    if (!ok) toast('لم تصل بيانات المزامنة.', 'err');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+}
+
+async function addUrl() {
+  const raw = $('urlInput').value.trim();
+  let u;
+  try { u = new URL(raw); } catch (e) { return toast('الرابط غير صالح.', 'err'); }
+  if (!/(^|\.)noon\.com$/i.test(u.hostname) || !/\/p\/?$/.test(u.pathname)) return toast('الصق رابط صفحة منتج على noon.com (ينتهي بـ /p/).', 'err');
+  if (!Bridge.connected) return toast('الإضافة غير متصلة — لا يمكن إضافة منتج للرادار في وضع المحاكاة.', 'warn');
+  const btn = $('addBtn');
+  btn.disabled = true;
+  const old = btn.innerHTML;
+  btn.innerHTML = '<span class="spin"></span> جارٍ الإضافة';
+  try {
+    const r = await Bridge.command('ADD_URL_TO_RADAR', { url: raw });
+    const p = r && r.product;
+    toast(p && p.lastError ? 'أُضيف للرادار، لكن تعذّرت القراءة الأولى: ' + p.lastError : 'تمت إضافة المنتج للرادار ✓', p && p.lastError ? 'warn' : 'ok', 5000);
+    $('urlInput').value = '';
+    state.demoPinned = false;
+    if (p) state.selected = p.sku;
+    await Bridge.sync();
+  } catch (e) {
+    toast('فشلت الإضافة: ' + e.message, 'err', 5000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+}
+
+async function deleteProduct(sku) {
+  if (!confirm('حذف هذا المنتج وكل بياناته؟')) return;
+  if (state.mode === 'demo') {
+    state.products = state.products.filter((p) => p.sku !== sku);
+    if (state.selected === sku) state.selected = null;
+    return renderAll();
+  }
+  try { await Bridge.command('DELETE_PRODUCT', { sku }); await Bridge.sync(); toast('تم الحذف'); }
+  catch (e) { toast('تعذّر الحذف: ' + e.message, 'err'); }
+}
+
+function exportCSV() {
+  const list = sortedList();
+  if (!list.length) return toast('لا توجد بيانات للتصدير.', 'warn');
+  const iso = (t) => { const d = new Date(t); const z = (n) => String(n).padStart(2, '0'); return d.getFullYear() + '-' + z(d.getMonth() + 1) + '-' + z(d.getDate()) + ' ' + z(d.getHours()) + ':' + z(d.getMinutes()); };
+  const rows = [['SKU', 'Title', 'Seller', 'Price EGP', 'Regular Price EGP', 'Stock', 'Tracked Sold Units', 'Tracked Revenue EGP', 'Velocity Units/Hr', 'Peak From', 'Peak To', 'Peak Units', 'Est Hours To Stockout', 'Rating', 'Reviews', 'URL']];
+  list.forEach((p) => rows.push([
+    p.sku, p.title, p.seller, p.price, p.regularPrice, p.stock, p.totalSold, Math.round(p.totalRevenue || 0), p.velocityPerHour,
+    p.peak ? iso(p.peak.from) : '', p.peak ? iso(p.peak.to) : '', p.peak ? p.peak.sold : '',
+    p.hoursLeft != null ? Math.round(p.hoursLeft * 10) / 10 : '', p.rating, p.reviews, p.url
+  ]));
+  const cell = (c) => {
+    let s = c == null ? '' : String(c);
+    if (typeof c !== 'number' && /^[=+\-@\t\r]/.test(s)) s = "'" + s; // neutralise spreadsheet formulas
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const csv = '\uFEFF' + rows.map((r) => r.map(cell).join(',')).join('\r\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'noon-pulse-' + new Date().toISOString().slice(0, 10) + '.csv';
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  toast('تم تصدير التقرير ✓');
+}
+
+/* ============================== settings ============================== */
+function openSettings() {
+  const s = state.settings || {};
+  $('sbEnabled').checked = !!s.supabaseEnabled;
+  $('sbUrl').value = s.supabaseUrl || '';
+  $('sbKey').value = s.supabaseKey || '';
+  $('sbTable').value = s.supabaseTable || 'pulse_products';
+  const ls = state.meta && state.meta.lastSupabase;
+  $('sbStatus').textContent = ls ? 'آخر مزامنة: ' + (ls.ok ? 'نجحت' : 'فشلت ' + (ls.status || ls.error || '')) + ' · ' + fmtTime(ls.at) : '';
+  $('settingsModal').classList.add('open');
+}
+async function saveSettings() {
+  if (!Bridge.connected) { toast('الإعدادات تُحفظ في الإضافة — اتصل بها أولاً.', 'warn'); return; }
+  try {
+    const r = await Bridge.command('SET_SETTINGS', { settings: {
+      supabaseEnabled: $('sbEnabled').checked, supabaseUrl: $('sbUrl').value, supabaseKey: $('sbKey').value, supabaseTable: $('sbTable').value || 'pulse_products'
+    } });
+    state.settings = r.settings || state.settings;
+    toast('تم حفظ الإعدادات ✓');
+    $('settingsModal').classList.remove('open');
+  } catch (e) { toast(e.message, 'err', 5000); }
+}
+async function clearAll() {
+  if (!confirm('سيتم مسح كل المنتجات والسجل. هل أنت متأكد؟')) return;
+  if (state.mode === 'demo') { state.products = []; state.selected = null; renderAll(); }
+  else {
+    try { await Bridge.command('CLEAR_DATA'); await Bridge.sync(); toast('تم مسح البيانات'); }
+    catch (e) { return toast(e.message, 'err'); }
+  }
+  $('settingsModal').classList.remove('open');
+}
+
+/* ============================== wiring ============================== */
+$('tbody').addEventListener('click', (e) => {
+  const del = e.target.closest('[data-del]');
+  if (del) { e.stopPropagation(); return deleteProduct(del.dataset.del); }
+  const tr = e.target.closest('tr[data-sku]');
+  if (!tr) return;
+  state.selected = tr.dataset.sku;
+  chart.hover = null;
+  renderTable();
+  renderInspector();
+  $('inspector').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
+$('searchInput').addEventListener('input', (e) => { state.query = e.target.value; renderTable(); });
+$('addBtn').addEventListener('click', addUrl);
+$('urlInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') addUrl(); });
+$('syncBtn').addEventListener('click', liveSync);
+$('csvBtn').addEventListener('click', exportCSV);
+$('demoBtn').addEventListener('click', () => {
+  state.demoPinned = Bridge.connected;
+  setMode('demo');
+  startDemo();
+  toast(Bridge.connected ? 'عرض تجريبي مؤقت — اضغط «مزامنة لحظية» للعودة لبيانات الإضافة.' : 'بدأت المحاكاة الحية (تتحدث كل ثانيتين ونصف).', 'ok', 4500);
+});
+$('statusPill').addEventListener('click', () => { Bridge.ping(); toast(Bridge.connected ? 'الإضافة متصلة ✓' : 'جارٍ إعادة فحص الاتصال…', 'ok', 1800); });
+$('settingsBtn').addEventListener('click', openSettings);
+$('settingsClose').addEventListener('click', () => $('settingsModal').classList.remove('open'));
+$('settingsModal').addEventListener('click', (e) => { if (e.target.id === 'settingsModal') $('settingsModal').classList.remove('open'); });
+$('settingsSave').addEventListener('click', saveSettings);
+$('clearBtn').addEventListener('click', clearAll);
+$('bannerClose').addEventListener('click', () => { bannerDismissed = true; $('connBanner').classList.add('hidden'); });
+
+/* ============================== boot ============================== */
+(async function boot() {
+  Bridge.init();
+  renderAll();
+  // The content-script bridge may attach slightly after this script runs: ping a few times.
+  Bridge.ping();
+  setTimeout(() => Bridge.ping(), 350);
+  setTimeout(() => Bridge.ping(), 1000);
+  await sleep(1300);
+  if (!Bridge.connected && state.mode === 'none') {
+    setMode('demo');
+    startDemo();
+  }
+  // Keep real data fresh while the tab is open (the extension also pushes changes instantly).
+  setInterval(() => {
+    if (Bridge.connected && state.mode === 'ext' && !document.hidden) Bridge.sync();
+    else if (!Bridge.connected) Bridge.ping();
+  }, 30000);
+})();
+</script>
+</body>
+</html>

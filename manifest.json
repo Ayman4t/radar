@@ -1,0 +1,32 @@
+{
+  "manifest_version": 3,
+  "name": "Noon Pulse | رادار نون",
+  "short_name": "Noon Pulse",
+  "version": "1.0.0",
+  "description": "Noon Pulse by Ayman Stack: client-side stock, sales-velocity and peak-demand radar for Noon Egypt.",
+  "author": "Ayman Stack",
+  "minimum_chrome_version": "110",
+  "permissions": ["storage", "alarms", "notifications"],
+  "host_permissions": [
+    "*://*.noon.com/*",
+    "https://*.supabase.co/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.noon.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["http://localhost/*", "http://127.0.0.1/*", "file:///*"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_title": "Noon Pulse | رادار نون"
+  }
+}
